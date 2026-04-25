@@ -1,4 +1,17 @@
+import yfinance as yf
 import numpy as np
+import matplotlib.pyplot as plt
+
+data = yf.download('AAPL', "2026-01-01", "2026-05-01")
+close = data["Close"]
+log_return = np.log(close) - np.log(close.shift(1))
+print(np.(log_return) * np.sqrt(252))
+
+ticker = yf.Ticker('AAPL')
+chain = ticker.option_chain('2026-05-01')
+calls = chain.calls
+
+close_val = close.iloc[-1]
 
 def B_S(S, K):
     result = max(S-K,0)
@@ -17,3 +30,19 @@ def MonteCarloPricer(K, S, r, o, t, n_simulations):
         payoffs.append(payoff)
     price = np.mean(payoffs) * np.exp(-r*t)
     return price
+
+model_prices = []
+strikes = calls['strike']
+real_price = calls['lastPrice']
+for K in strikes:
+    final_price = MonteCarloPricer(K, 259.23, 0.043, 0.2, (30/252), 10000)
+    model_prices.append(final_price)
+
+
+plt.scatter(strikes, model_prices, color = 'blue', label = 'model_prices')
+plt.scatter(strikes, real_price, color = 'red', label = 'real_price')
+plt.title('Monte Carlo Options Pricer Volatility Difference in AAPL Stock')
+plt.xlabel('Strike Prices')
+plt.ylabel('Real Prices vs Model Prices')
+plt.legend()
+plt.show()
