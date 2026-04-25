@@ -2,16 +2,16 @@ import yfinance as yf
 import numpy as np
 import matplotlib.pyplot as plt
 
-data = yf.download('AAPL', "2026-01-01", "2026-05-01")
-close = data["Close"]
+data = yf.download('AAPL', "2026-01-01", "2026-05-29")
+close = data["Close"].squeeze()
 log_return = np.log(close) - np.log(close.shift(1))
-print(np.(log_return) * np.sqrt(252))
+avg_log = (np.std(log_return) * np.sqrt(252))
 
 ticker = yf.Ticker('AAPL')
-chain = ticker.option_chain('2026-05-01')
+chain = ticker.option_chain('2026-05-29')
 calls = chain.calls
 
-close_val = close.iloc[-1]
+close_val = float(close.iloc[-1])
 
 def B_S(S, K):
     result = max(S-K,0)
@@ -35,7 +35,7 @@ model_prices = []
 strikes = calls['strike']
 real_price = calls['lastPrice']
 for K in strikes:
-    final_price = MonteCarloPricer(K, 259.23, 0.043, 0.2, (30/252), 10000)
+    final_price = MonteCarloPricer(K, close_val, 0.043, avg_log, (21/252), 10000)
     model_prices.append(final_price)
 
 
@@ -46,3 +46,7 @@ plt.xlabel('Strike Prices')
 plt.ylabel('Real Prices vs Model Prices')
 plt.legend()
 plt.show()
+
+print(model_prices)
+print(real_price)
+
