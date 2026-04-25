@@ -1,14 +1,3 @@
-import yfinance as yf
-import numpy as np
-import matplotlib.pyplot as plt
-
-data = yf.download('AAPL', "2026-01-01", "2026-05-29")
-close = data["Close"].squeeze()
-log_return = np.log(close) - np.log(close.shift(1))
-avg_log = (np.std(log_return) * np.sqrt(252))
-
-ticker = yf.Ticker('AAPL')
-chain = ticker.option_chain('2026-05-29')
 calls = chain.calls
 
 close_val = float(close.iloc[-1])
@@ -45,8 +34,9 @@ plt.title('Monte Carlo Options Pricer Volatility Difference in AAPL Stock')
 plt.xlabel('Strike Prices')
 plt.ylabel('Real Prices vs Model Prices')
 plt.legend()
+plt.savefig('volatility_chart.png')
 plt.show()
+
 
 print(model_prices)
 print(real_price)
-
