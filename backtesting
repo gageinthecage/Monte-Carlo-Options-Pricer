@@ -1,0 +1,53 @@
+#Back Tester#
+
+data2 = yf.download('AAPL',"2024-01-01", "2025-10-10")
+close2 = data2["Close"].squeeze()
+profits = []
+
+#Annualized volatility in the rolling windows of 10 days vs 60 days#
+
+vol_10 = close2.pct_change().rolling(10).std() * np.sqrt(252)
+vol_60 = close2.pct_change().rolling(60).std() * np.sqrt(252)
+signal = vol_10 > (vol_60*1.35)
+signal_days = close2[signal].index
+
+#Options expire on the third friday of every month#
+
+def thirdFriday(i):
+        first = i.replace(day=1)
+        days_until_friday = (4 - first.weekday()) % 7
+        third = first + timedelta(days=days_until_friday + 14)
+        if third <= i:
+            if third <= i:
+                if i.month == 12:
+                    i = i.replace(year=i.year + 1, month=1, day =1)
+                else:
+                    i = i.replace(month=i.month + 1, day =1)
+                days_until_friday = (4 - first.weekday()) % 7
+                third = i + timedelta(days=days_until_friday + 14)
+                return third
+        return third
+        
+avg_log2 = float(np.std(close2.pct_change().dropna()) * np.sqrt(252))
+
+#Runs the premium pricer and calculates profit from the close price minus the strike price#
+
+for i in signal_days:
+    expiry = thirdFriday(i)
+    if expiry not in close2.index:
+        expiry = close2.index.searchsorted(expiry)
+        if expiry >= len(close2):
+            continue
+        expiry = close2.index[expiry]
+        time = (expiry - i).days / 252
+        K = float(close2[i])
+        premium = MonteCarloPricer(K, float(close2[i]), 0.043, avg_log2, time, 1000)
+        price = close2[expiry]
+        profit = premium - max(price-K, 0)
+        profits.append(profit)
+        print(f"Processing {i}")
+
+profit_all = np.sum(profits)
+
+print(profit_all)
+
